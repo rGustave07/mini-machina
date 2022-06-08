@@ -2,7 +2,7 @@
 ## _A small, humble, state machine_
 
 Mini Machina is a light weight state machine that exposes a simple api to
-manage moving from state-to-state and fire effects on states
+manage moving from state-to-state and fire effects on states.
 
 - Simple
 - Easy to understand
