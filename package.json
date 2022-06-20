@@ -1,11 +1,16 @@
 {
   "name": "@ritterg/mini-machina",
   "version": "1.0.0",
-  "description": "A Simple state machine package",
-  "main": "index.js",
+  "description": "A simple state machine package",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "test": "mocha -r ts-node/register */__tests__/**/*.test.ts"
+    "test": "mocha -r ts-node/register */__tests__/**/*.test.ts",
+    "build": "tsc",
+    "prepublishOnly": "npm run test",
+    "prepare": "npm run build"
   },
+  "files": ["lib/**/*"],
   "author": "Ritter Gustave",
   "license": "ISC",
   "devDependencies": {

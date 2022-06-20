@@ -3,13 +3,13 @@ export interface InitiatingStateObject<Q> {
 	states: State<Q>
 }
 
-type EffectFunction = () => any;
+export type EffectFunction = () => any;
 
-type State<Q = any> = {
+export type State<Q = any> = {
 	[key: string]: StateOptions<Q>;
 };
 
-type StateOptions<Q> = {
+export type StateOptions<Q> = {
 	on: {
 		[key: string]: {
 			effect?: Q,
@@ -17,7 +17,7 @@ type StateOptions<Q> = {
 	};
 }
 
-interface MachineControls {
+export interface MachineControls {
 	getState: () => State,
 	getStateName: () => string,
 	dispatch: (nextState: string) => void,
