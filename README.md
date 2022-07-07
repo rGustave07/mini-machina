@@ -16,35 +16,41 @@ manage moving from state-to-state and fire effects on states.
 
 ## Usage/Examples
 
-```javascript
+```typescript
 import generateNewMachine from "./machine/machine";
+
+enum State {
+	GREEN = 'GREEN',
+	YELLOW = 'YELLOW',
+	RED = 'RED',
+}
 
 const StopLight = generateNewMachine({
 	machineName: "StopLight",
-	startState: 'RED',
+	startState: State.RED,
 	states: new Map([
 		[
 			State.GREEN,
 			{
-				stateName: "GREEN",
-				connections: ["YELLOW"],
-				data: { name: "blah", effect: () => {} },
+				stateName: State.GREEN,
+				connections: [State.YELLOW],
+				data: { name: "This is", effect: () => {} },
 			},
 		],
 		[
 			State.YELLOW,
 			{
-				stateName: "YELLOW",
-				connections: ["RED"],
-				data: { name: "blah", effect: () => { console.log('effect fired')}},
+				stateName: State.YELLOW,
+				connections: [State.RED],
+				data: { name: "Some Stateful", effect: () => { console.log('effect fired')}},
 			},
 		],
 		[
 			State.RED,
 			{
-				stateName: "RED",
-				connections: ["GREEN"],
-				data: { name: "blah", effect: () => {} },
+				stateName: State.RED,
+				connections: [State.GREEN],
+				data: { name: "data", effect: () => {} },
 			},
 		],
 	]),
@@ -61,6 +67,21 @@ StopLight.changeState("RED"); // Transition to red ( Error)
 Create a machine by importing generateNewMachine. define your states as a new map with a tuple argument that takes the state name as a string and a state object configuration, and interact with the machine with the exposed methods ```currentState```, ```changeState```.
 
 define what transitions are allowed in the connections array of a state options object. if the machine tries to transition to a state that is not allowed or not defined in the connections array an error will be thrown.
+
+## Args
+
+**states**
+states should be instantiated with new Map() and an array of tuples passed in that describe your states like so:
+new Map([[{StateName}, {StateOptions}]])
+
+**StateOptions**
+an Object consisting of a stateName: string; connections: string[]; and data which can have any object shape as long as it's uniform among all states, data will be accessible in later versions via an exposed method. if effect is defined on data as a function it will be executed when the states change.
+
+**isAlwaysBiDirectional**
+If this is true the graph structure underneath the machine will map both ways allowing for state transitions to always be bidirectional, meaning if you define a connection one way it will automatically be able to transition back.
+
+**machineName**
+will be accessible in later versions or removed completely depending on if I find a use case or not.
 
 ## Contributing
 
