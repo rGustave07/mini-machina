@@ -20,44 +20,47 @@ manage moving from state-to-state and fire effects on states.
 import generateNewMachine from "./machine/machine";
 
 const StopLight = generateNewMachine({
-	identification: "StopLight",
-	startState: "red",
-	states: {
-		red: {
-			on: {
-				green: {
-					effect: () => {},
-				},
+	machineName: "StopLight",
+	startState: 'RED',
+	states: new Map([
+		[
+			State.GREEN,
+			{
+				stateName: "GREEN",
+				connections: ["YELLOW"],
+				data: { name: "blah", effect: () => {} },
 			},
-		},
-		green: {
-			on: {
-				yellow: {
-					effect: () => {},
-				},
+		],
+		[
+			State.YELLOW,
+			{
+				stateName: "YELLOW",
+				connections: ["RED"],
+				data: { name: "blah", effect: () => { console.log('effect fired')}},
 			},
-		},
-		yellow: {
-			on: {
-				red: {
-					effect: () => {},
-				},
+		],
+		[
+			State.RED,
+			{
+				stateName: "RED",
+				connections: ["GREEN"],
+				data: { name: "blah", effect: () => {} },
 			},
-		},
-	},
+		],
+	]),
+	isAlwaysBiDirectional: false,
 });
 
-console.log(StopLight.getStateName()); // Initial State: red
-StopLight.dispatch("green"); // Transition to green
+console.log(StopLight.currentState()); // Initial State: red
+StopLight.changeState("GREEN"); // Transition to green
 
-console.log(StopLight.getStateName()); // on green state
-StopLight.dispatch("red"); // Transition to red ( Error)
+console.log(StopLight.currentState()); // on green state
+StopLight.changeState("RED"); // Transition to red ( Error)
 ```
 
-Create a machine by importing generateNewMachine. define your states as objects with an on property, and
-interact with the machine with the exposed methods ```dispatch```, ```getState```, and ```getStateName```.
+Create a machine by importing generateNewMachine. define your states as a new map with a tuple argument that takes the state name as a string and a state object configuration, and interact with the machine with the exposed methods ```currentState```, ```changeState```.
 
-define what transitions are allowed in the on Object of a state. if the machine tries to transition to a state that is not allowed or defined in the on object an error will be thrown.
+define what transitions are allowed in the connections array of a state options object. if the machine tries to transition to a state that is not allowed or not defined in the connections array an error will be thrown.
 
 ## Contributing
 

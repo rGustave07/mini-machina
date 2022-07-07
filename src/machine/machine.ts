@@ -1,53 +1,73 @@
-export interface InitiatingStateObject<Q> {
-	startState: string,
-	states: State<Q>
+import Graph from "./Graph/Graph";
+import GraphVertex from "./Graph/GraphVertex";
+
+interface State<T> {
+	stateName: string;
+	connections: string[];
+	data: T & { effect?: () => void };
 }
 
-export type EffectFunction = () => any;
-
-export type State<Q = any> = {
-	[key: string]: StateOptions<Q>;
-};
-
-export type StateOptions<Q> = {
-	on: {
-		[key: string]: {
-			effect?: Q,
-		};
-	};
+interface StateConfiguration<StateData> {
+	machineName?: string;
+	startState: string;
+	states: Map<string, State<StateData>>;
+	isAlwaysBiDirectional: boolean;
 }
 
-export interface MachineControls {
-	getState: () => State,
-	getStateName: () => string,
-	dispatch: (nextState: string) => void,
+interface MachineControls {
+	changeState: (nextStateName: string) => void;
+	currentState: () => string;
 }
 
-export default function generateNewMachine<Q = EffectFunction>(stateObject: InitiatingStateObject<Q>): MachineControls {
-	const state = Object.create(stateObject);
+const mapVerticesAndEdges = <StateData>(g: Graph, config: StateConfiguration<StateData>) => {
+	config.states.forEach(( state, key ) => {
+		const newVertex = new GraphVertex<StateData>(key, state.data);
+		g.addVertex(newVertex);
 
-	let currentState: State = state.states[state.startState];
-	let currentStateName: string = state.startState;
+		state.connections.forEach(connection => {
+			if (!config.states.get(connection)) {
+				throw new Error(`
+					Could not find relevant connection for ${connection}
+				`);
+			}
+
+			const destVertexState = config.states.get(connection);
+			const destinationVertex = new GraphVertex(connection, destVertexState);
+			g.addEdge(newVertex, destinationVertex);
+		});
+	})
+}
+
+export default function generateNewMachine<StateData>(
+	stateConfig: StateConfiguration<StateData>
+): MachineControls {
+	const graph = new Graph(stateConfig.isAlwaysBiDirectional);
+	let currentState = stateConfig.startState;
+
+	mapVerticesAndEdges<StateData>(graph, stateConfig);
+
+	const getState = () => currentState;
 
 	const dispatch = (nextState: string) => {
-		if (state.states[currentStateName].on[nextState]) {
-			currentStateName = nextState;
-			currentState = state.states[nextState]
-		} else {
-			throw new Error(`
-				Unable to dispatch next state not accessible on current state object,
-				this happens when trying to queue up another state that doesn't
-				exist within the options of the current state
-			`);
-		}
-	}
+		const currentVertexConfig = stateConfig.states.get(currentState);
+		const nextVertexConfig = stateConfig.states.get(nextState);
 
-	const getState = (): State => currentState;
-	const getStateName = (): string => currentStateName
+		if (!currentVertexConfig?.connections.includes(nextState) || !nextVertexConfig) {
+			throw new Error(
+				`Current state does not connect to dispatched state`
+			);
+		}
+
+		nextVertexConfig?.data?.effect?.();
+		currentState = nextVertexConfig.stateName;
+	};
 
 	return {
-		getState,
-		getStateName,
-		dispatch,
-	}
+		currentState() {
+			return getState();
+		},
+		changeState(nextState) {
+			dispatch(nextState);
+		},
+	};
 }
