@@ -14,9 +14,10 @@ interface StateConfiguration<StateData> {
 	isAlwaysBiDirectional: boolean;
 }
 
-interface MachineControls {
+interface MachineControls<StateData> {
 	changeState: (nextStateName: string) => void;
 	currentState: () => string;
+	getStateData: () => StateData;
 }
 
 const mapVerticesAndEdges = <StateData>(g: Graph, config: StateConfiguration<StateData>) => {
@@ -32,7 +33,11 @@ const mapVerticesAndEdges = <StateData>(g: Graph, config: StateConfiguration<Sta
 			}
 
 			const destVertexState = config.states.get(connection);
-			const destinationVertex = new GraphVertex(connection, destVertexState);
+			if (!destVertexState) {
+				throw new Error(`Unexpected error parsing states for connection`)
+			}
+
+			const destinationVertex = new GraphVertex<State<StateData>>(connection, destVertexState);
 			g.addEdge(newVertex, destinationVertex);
 		});
 	})
@@ -40,8 +45,8 @@ const mapVerticesAndEdges = <StateData>(g: Graph, config: StateConfiguration<Sta
 
 export default function generateNewMachine<StateData>(
 	stateConfig: StateConfiguration<StateData>
-): MachineControls {
-	const graph = new Graph(stateConfig.isAlwaysBiDirectional);
+): MachineControls<StateData> {
+	const graph = new Graph<State<StateData>>(stateConfig.isAlwaysBiDirectional);
 	let currentState = stateConfig.startState;
 
 	mapVerticesAndEdges<StateData>(graph, stateConfig);
@@ -69,5 +74,14 @@ export default function generateNewMachine<StateData>(
 		changeState(nextState) {
 			dispatch(nextState);
 		},
+		getStateData() {
+			const foundVertex = graph.getVertexByKey(currentState);
+
+			if (!foundVertex) {
+				return {} as StateData
+			}
+
+			return ( foundVertex as GraphVertex<StateData> ).value
+		}
 	};
 }

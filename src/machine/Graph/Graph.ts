@@ -1,8 +1,8 @@
 import GraphEdge from "./GraphEdge";
 import GraphVertex from "./GraphVertex";
 
-export default class Graph {
-	vertices: Map<string, GraphVertex>;
+export default class Graph<T=any> {
+	vertices: Map<string, GraphVertex<T>>;
 	edges: Map<string, GraphEdge[]>;
 	adjacencyMap: Map<string, GraphVertex[]>;
 	isDirected: boolean;
@@ -41,8 +41,13 @@ export default class Graph {
 		}
 	}
 
-	public getVertexByKey(vertexKey: any) {
-		return this.vertices.get(vertexKey);
+	public getVertexByKey(vertexKey: any): GraphVertex | boolean {
+		if (!this.vertices.get(vertexKey)) {
+			return false;
+		}
+
+		const foundVertex = this.vertices.get(vertexKey) as GraphVertex<T>;
+		return foundVertex;
 	}
 
 	static printGraph(g: Graph) {

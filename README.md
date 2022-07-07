@@ -25,7 +25,11 @@ enum State {
 	RED = 'RED',
 }
 
-const StopLight = generateNewMachine({
+interface StatefulInformation {
+	name: string;
+}
+
+const StopLight = generateNewMachine<StatefulInformation>({
 	machineName: "StopLight",
 	startState: State.RED,
 	states: new Map([
@@ -60,6 +64,8 @@ const StopLight = generateNewMachine({
 console.log(StopLight.currentState()); // Initial State: red
 StopLight.changeState("GREEN"); // Transition to green
 
+console.log(StopLight.getStateData()) // { name: "This is", effect: () => {} }
+
 console.log(StopLight.currentState()); // on green state
 StopLight.changeState("RED"); // Transition to red ( Error)
 ```
@@ -68,6 +74,8 @@ Create a machine by importing generateNewMachine. define your states as a new ma
 
 define what transitions are allowed in the connections array of a state options object. if the machine tries to transition to a state that is not allowed or not defined in the connections array an error will be thrown.
 
+You can pass an interface to generateNewMachine that describes the shape of stateful information that your states hold. This allows you to access it later
+via the ```getStateData``` method
 ## Args
 
 **states**
